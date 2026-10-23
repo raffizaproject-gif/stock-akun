@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3f5f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#11161c" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffcd1f">
+
 <title>Stok Akun</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -359,6 +359,49 @@
     #tool-mail, #tool-am { max-width: 640px; }
     .modal { max-width: 420px; }
   }
+</style>
+<style id="neo-theme">
+/* Tema neo-brutalism (paksa mode terang) */
+:root{--bg:#ffcd1f;--card:#fff;--ink:#000;--muted:#55524b;--line:#000;--accent:#3cc63c;--accent-soft:#d4f7d4;--accent-hover:#5bd65b;--on-accent:#000;
+--lic:#d6174f;--lic-soft:#ffd9e3;--danger:#d6193f;--danger-soft:#ffd3dc;--chip:#ffe27a;--new:#7b6cf6;--new-soft:#e4dfff;--on-new:#fff;
+--stat-a:#7b6cf6;--stat-b:#7b6cf6;--stat-ink:#fff;--stat-line:#000;--font:"Outfit","Plus Jakarta Sans",system-ui,sans-serif;--font-display:"Outfit",sans-serif;--b:3px solid #000;color-scheme:light}
+body::before{content:"";position:fixed;inset:auto;left:-170px;top:90px;width:380px;height:380px;border-radius:50%;background:#ff4f7b;z-index:-1;pointer-events:none;animation:none;transform:none}
+body::after{content:"";position:fixed;right:0;bottom:0;width:44vw;height:40vh;background:#7b6cf6;clip-path:polygon(0 30%,100% 0,100% 100%,0 100%);z-index:-1;pointer-events:none}
+
+:focus-visible{outline:3px solid #7b6cf6}
+h1,.login-card h2{font-weight:800;letter-spacing:-.03em}
+.btn{border:var(--b);border-radius:12px;box-shadow:4px 4px 0 #000;font-weight:800;transition:transform .1s,box-shadow .1s,background .15s}
+.btn:active{transform:translate(4px,4px);box-shadow:none}
+.btn.ghost{background:#fff;border:var(--b);color:#000}.btn.ghost:hover{background:var(--accent-soft)}
+.btn.danger{color:#fff}
+.btn.small{box-shadow:3px 3px 0 #000}
+.icon-btn{border-radius:10px;color:#000}.icon-btn:hover{background:var(--chip)}
+.segbar{background:#fff;border:var(--b);border-radius:16px;box-shadow:4px 4px 0 #000}
+.tool-btn,.mtab,.atab{border-radius:11px;color:#000;font-weight:700}
+.tool-btn[aria-selected="true"],.mtab[aria-selected="true"],.atab[aria-selected="true"]{background:var(--accent);color:#000;box-shadow:none;border:2px solid #000}
+.mtab .n,.count{background:#fff;color:#000;border:2px solid #000}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;border-bottom:0;margin-bottom:16px}
+.tab{padding:8px 12px;background:#fff;color:#000;border:var(--b);border-radius:12px;margin-bottom:0;box-shadow:3px 3px 0 #000}
+.tab[aria-selected="true"]{background:#fff3bd;border-bottom-color:#000;color:#000;box-shadow:none;transform:translate(3px,3px)}
+.stat{border:var(--b);border-radius:18px;box-shadow:6px 6px 0 #000;background:#7b6cf6}
+.add,.panel,.login-card,.modal,.notice{border:var(--b);border-radius:18px;box-shadow:5px 5px 0 #000;background:#fff}
+.notice{background:var(--danger-soft);box-shadow:3px 3px 0 #000}
+.list{display:grid;gap:28px}
+.item{border:var(--b);border-radius:16px;box-shadow:5px 5px 0 #000;background:#fff;--c:#9a9a9a}
+.item::before{content:"";position:absolute;left:12px;top:-13px;width:38%;height:14px;border:var(--b);border-bottom:0;border-radius:9px 9px 0 0;background:var(--c)}
+.item.t-non{--c:#3cc63c}.item.t-lic{--c:#ff4f7b}
+.avatar{color:#000;border:2px solid #000;border-radius:10px;background:var(--c,#ffcd1f)}
+.item.t-lic .avatar,.item.t-non .avatar{background:var(--c);color:#000}
+.field{border-top:2px solid #000}
+.mrow{border:var(--b);border-radius:14px;box-shadow:3px 3px 0 #000}
+.menu,.sg-menu{border:var(--b);border-radius:14px;box-shadow:4px 4px 0 #000;background:#fff}
+.menu button:hover,.sg-menu button:hover{background:var(--chip)}
+input[type="text"],input[type="password"],input[type="number"],select.msel,.tk-sel,textarea{background:#fff;border:var(--b);border-radius:12px;box-shadow:3px 3px 0 #000;color:#000}
+input:focus,select.msel:focus,.tk-sel:focus,textarea:focus{border-color:#000;box-shadow:3px 3px 0 #7b6cf6;outline:0}
+.error{font-weight:600}
+.overlay{background:rgba(0,0,0,.6)}
+.toast{border:var(--b);background:var(--accent);color:#000;font-weight:700;box-shadow:4px 4px 0 #000}
+@media(max-width:560px){.wrap{padding-left:14px;padding-right:18px}body::before{width:260px;height:260px;left:-120px;top:60px}}
 </style>
 </head>
 <body>
