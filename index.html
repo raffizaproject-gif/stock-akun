@@ -441,6 +441,25 @@ html[data-theme="dark"] .list{gap:26px}
 if(t!=="dark"&&t!=="light")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
 document.documentElement.setAttribute("data-theme",t)})();
 </script>
+<style id="neo-preview">
+.ttab{min-width:0;border-radius:11px;color:var(--ink);font-weight:700;font-size:.85rem}
+.ttab[aria-selected="true"]{background:var(--accent);color:#000;box-shadow:none;border:2px solid var(--k)}
+.ttab .n{background:var(--paper);color:var(--ink);border:2px solid var(--k)}
+html[data-theme="dark"] .ttab[aria-selected="true"]{border-color:transparent}
+.pv-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.pv-mode{display:flex;gap:4px;padding:3px;background:var(--paper);border:3px solid var(--k);border-radius:12px;margin-right:auto}
+.pv-m{min-height:32px;padding:0 12px;border-radius:8px;font-weight:700;font-size:.85rem;color:var(--ink)}
+.pv-m[aria-pressed="true"]{background:var(--accent);color:#000}
+.pv-bar a.btn{text-decoration:none}
+.pv-stage{position:relative;margin:0 auto;background:var(--paper);border:3px solid var(--k);border-radius:22px;box-shadow:6px 6px 0 var(--sh);overflow:hidden;transition:max-width .25s}
+.pv-stage.mobile{max-width:390px;height:660px}
+.pv-stage.desktop{max-width:100%;height:560px}
+.pv-stage iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+.pv-load{position:absolute;inset:0;display:grid;place-items:center;font-weight:700;color:var(--muted);background:var(--paper);z-index:1}
+html[data-theme="dark"] .pv-mode,html[data-theme="dark"] .pv-stage{border-width:2px}
+@media(max-width:560px){.pv-stage.mobile{height:70vh;max-width:100%}.pv-stage.desktop{height:60vh}}
+@media(prefers-reduced-motion:reduce){.pv-stage{transition:none}}
+</style>
 </head>
 <body>
 <!-- Kumpulan ikon -->
@@ -574,6 +593,7 @@ document.documentElement.setAttribute("data-theme",t)})();
       <button class="ttab" role="tab" aria-selected="true" data-tt="prod">Produk <span class="n" id="tk-n1">0</span></button>
       <button class="ttab" role="tab" aria-selected="false" data-tt="bn">Banner <span class="n" id="tk-n2">0</span></button>
       <button class="ttab" role="tab" aria-selected="false" data-tt="brand">Logo</button>
+      <button class="ttab" role="tab" aria-selected="false" data-tt="pv">Pratinjau</button>
     </div>
 
     <div id="tk-p-prod">
@@ -637,6 +657,22 @@ document.documentElement.setAttribute("data-theme",t)})();
         </div></div>
       </section>
       <div class="list" id="tk-blist"></div>
+    </div>
+
+    <div id="tk-p-pv" class="hidden">
+      <div class="pv-bar">
+        <div class="pv-mode" role="group" aria-label="Ukuran tampilan">
+          <button type="button" class="pv-m" data-pvm="mobile" aria-pressed="true">HP</button>
+          <button type="button" class="pv-m" data-pvm="desktop" aria-pressed="false">Desktop</button>
+        </div>
+        <button type="button" class="btn ghost small" id="pv-reload">Muat ulang</button>
+        <a class="btn ghost small" id="pv-open" href="https://alightmotionpremiumvix.netlify.app/" target="_blank" rel="noopener noreferrer">Buka di tab baru</a>
+      </div>
+      <div class="pv-stage mobile" id="pv-stage">
+        <div class="pv-load" id="pv-load">Memuat toko…</div>
+        <iframe id="pv-frame" title="Pratinjau web toko" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer"></iframe>
+      </div>
+      <p class="tk-hint" style="margin-top:12px">Pratinjau memuat web toko asli. Setelah mengubah produk, banner, atau logo, tekan Muat ulang. Kalau layar kosong, situs menolak ditampilkan di dalam halaman, jadi pakai Buka di tab baru.</p>
     </div>
 
     <div id="tk-p-brand" class="hidden">
@@ -1671,6 +1707,24 @@ document.querySelectorAll(".ttab").forEach(b => b.addEventListener("click", () =
   $("tk-p-prod").classList.toggle("hidden", b.dataset.tt !== "prod");
   $("tk-p-bn").classList.toggle("hidden", b.dataset.tt !== "bn");
   $("tk-p-brand").classList.toggle("hidden", b.dataset.tt !== "brand");
+  $("tk-p-pv").classList.toggle("hidden", b.dataset.tt !== "pv");
+  if (b.dataset.tt === "pv") pvLoad(false);
+}));
+const PV_URL = "https://alightmotionpremiumvix.netlify.app/";
+let pvLoaded = false;
+function pvLoad(force) {
+  if (pvLoaded && !force) return;
+  pvLoaded = true;
+  const f = $("pv-frame"), l = $("pv-load");
+  l.classList.remove("hidden");
+  f.onload = null;
+  f.src = "about:blank";
+  setTimeout(() => { f.onload = () => l.classList.add("hidden"); f.src = PV_URL; }, 60);
+}
+$("pv-reload").addEventListener("click", () => pvLoad(true));
+document.querySelectorAll(".pv-m").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".pv-m").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  $("pv-stage").className = "pv-stage " + b.dataset.pvm;
 }));
 async function tkSave(again) {
   const name = $("tk-name").value.trim(), pv = $("tk-price").value, price = Number(pv);
