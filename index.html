@@ -415,6 +415,27 @@ html[data-theme="dark"] .theme-btn .moon{display:none}
 @media(max-width:560px){.wrap{padding-left:14px;padding-right:18px}body::before{width:260px;height:260px;left:-120px;top:60px}}
 @media(prefers-reduced-motion:reduce){.btn,.theme-btn{transition:none}}
 </style>
+<style id="neo-dark">
+/* Mode gelap yang lebih tenang: tanpa hiasan, tanpa bayangan, border tipis redup, satu warna aksen */
+html[data-theme="dark"]{--bg:#121014;--paper:#1b181f;--card:#1b181f;--ink:#f2eee6;--k:#3d3946;--sh:transparent;--sel:#2a2633;--muted:#a39daf;--line:#2c2833;
+--accent-soft:#1d2f21;--chip:#2a2633;--lic-soft:#3a1d28;--danger-soft:#3a1d23;--new-soft:#25213f;--stat-a:#241f35;--stat-b:#241f35;--stat-ink:#f2eee6;--stat-line:#3d3946}
+html[data-theme="dark"] body::before,html[data-theme="dark"] body::after{display:none}
+html[data-theme="dark"] :where(.btn,.segbar,.tab,.add,.panel,.login-card,.modal,.notice,.item,.mrow,.menu,.sg-menu,.theme-btn,.toast,.stat,.count,.mtab .n,input,select,textarea){border-width:2px}
+html[data-theme="dark"] .btn:not(.ghost):not(.danger),html[data-theme="dark"] .toast{border-color:var(--accent)}
+html[data-theme="dark"] .tool-btn[aria-selected="true"],html[data-theme="dark"] .mtab[aria-selected="true"],html[data-theme="dark"] .atab[aria-selected="true"]{border-color:transparent}
+html[data-theme="dark"] .tab{box-shadow:none}
+html[data-theme="dark"] .tab[aria-selected="true"]{transform:none;border-color:var(--accent);color:var(--accent)}
+html[data-theme="dark"] .tab[aria-selected="true"] .count{color:var(--ink)}
+html[data-theme="dark"] .item::before{border-width:2px;opacity:.85}
+html[data-theme="dark"] .item.t-non{--c:#2f8f3a}
+html[data-theme="dark"] .item.t-lic{--c:#b8335a}
+html[data-theme="dark"] .avatar{border-color:transparent}
+html[data-theme="dark"] .field{border-top:1px solid var(--line)}
+html[data-theme="dark"] input:focus,html[data-theme="dark"] select:focus,html[data-theme="dark"] textarea:focus{box-shadow:none;border-color:var(--accent)}
+html[data-theme="dark"] .stat{background:#241f35}
+html[data-theme="dark"] .stat-num{color:var(--accent)}
+html[data-theme="dark"] .list{gap:26px}
+</style>
 <script>
 (function(){var t;try{t=localStorage.getItem("theme")}catch(e){}
 if(t!=="dark"&&t!=="light")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
