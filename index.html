@@ -165,7 +165,7 @@
   .mrow .i { color: var(--muted); font-size: .84rem; margin-top: 1px; }
   #m-reader h3 { font-size: 1.15rem; margin: 12px 0 4px; }
   #m-reader .mm { color: var(--muted); font-size: .85rem; margin-bottom: 12px; overflow-wrap: anywhere; }
-  #m-reader iframe { width: 100%; height: 420px; border: 0; border-radius: 12px; background: #fff; }
+  #m-reader iframe { display: block; width: 100%; height: 420px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color-scheme: light dark; }
   #m-reader pre { white-space: pre-wrap; font: inherit; line-height: 1.6; }
 
   /* aktivasi AM */
@@ -201,6 +201,29 @@
   /* kartu akun mail bisa dibuka-tutup */
   .tag-q { font-size: .72rem; font-weight: 600; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0 8px; margin-left: 6px; }
   .tag-q.now { background: var(--accent); color: var(--on-accent); }
+  /* generate akun acak & daftar akun diambil */
+  .tab[data-tab="taken"] .dot { background: var(--new); }
+  .bg { margin-bottom: 12px; }
+  .bg .sg-head { border-left: 4px solid var(--new); }
+  .bg.pending .sg-head { border-left-color: var(--lic); }
+  .bg.taken .sg-head { border-left-color: var(--new); }
+  .bg .sg-toggle { align-items: center; }
+  .bg-t { flex: 1; min-width: 0; display: block; }
+  .bg-t b { display: block; font-weight: 700; overflow-wrap: anywhere; }
+  .bg-t small { display: block; color: var(--muted); font-size: .78rem; font-weight: 500; margin-top: 1px; }
+  .bg-tag { font-size: .72rem; font-weight: 600; border-radius: 999px; padding: 1px 9px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+  .bg-tag.pending { background: var(--lic-soft); color: var(--lic); }
+  .bg-tag.taken { background: var(--new-soft); color: var(--new); }
+  .bg .sg-body { display: none; }
+  .bg.open .sg-body { display: grid; }
+  .bg.open .sg-toggle .chev { transform: rotate(180deg); }
+  .bg-key { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 10px 12px; }
+  .bg-key .k { flex: 1; min-width: 0; }
+  .bg-key .k span { display: block; color: var(--muted); font-size: .78rem; }
+  .bg-key .k b { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: .2em; }
+  .bg-note { color: var(--muted); font-size: .88rem; }
+  .gen-hint { color: var(--muted); font-size: .85rem; }
+  .tag-resv { font-size: .72rem; font-weight: 600; background: var(--new-soft); color: var(--new); border-radius: 999px; padding: 0 8px; margin-left: 6px; }
   .stat { display: flex; align-items: center; gap: 16px; background: linear-gradient(145deg, var(--stat-a), var(--stat-b)); color: var(--stat-ink); border: 1px solid var(--stat-line); border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; }
   .stat-num { font-family: var(--font-display); font-size: 3.4rem; font-weight: 800; line-height: .95; letter-spacing: -.05em; flex: none; }
   .stat-txt { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.01em; }
@@ -319,6 +342,23 @@
   .tk-btns .btn { flex: 1 1 140px; }
   .tk-btns #tk-save { flex-basis: 100%; }
   @media (max-width: 400px) { .tool-btn { font-size: .82rem; padding: 0 2px; } .tk-two { grid-template-columns: 1fr; } }
+
+  /* ===== Tampilan lebar (PC / tablet): isi memenuhi layar, daftar jadi beberapa kolom ===== */
+  @media (min-width: 760px) {
+    .wrap { max-width: 1120px; padding-left: 28px; padding-right: 28px; }
+    #tools-nav { max-width: 640px; }
+    .stat { max-width: 480px; }
+    #add-box, #gen-box, #tk-add, #tk-badd, #tk-p-brand .add { max-width: 640px; }
+    /* daftar akun di dalam grup tanggal / generate: beberapa kolom */
+    .sg-body, .bg.open .sg-body { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); align-items: start; }
+    .bg-key, .bg-note { grid-column: 1 / -1; }
+    /* produk & banner toko */
+    #tk-list, #tk-blist { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); align-items: start; }
+    #tk-list > .empty, #tk-blist > .empty { grid-column: 1 / -1; }
+    /* tool yang isinya formulir saja tetap enak dibaca, tidak melebar */
+    #tool-mail, #tool-am { max-width: 640px; }
+    .modal { max-width: 420px; }
+  }
 </style>
 </head>
 <body>
@@ -389,7 +429,22 @@
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-non" aria-selected="true" data-tab="non"><span class="dot"></span>Non Licency <span class="count" id="count-non">0</span></button>
     <button class="tab" role="tab" id="tab-lic" aria-selected="false" data-tab="lic"><span class="dot"></span>Licency <span class="count" id="count-lic">0</span></button>
+    <button class="tab" role="tab" id="tab-taken" aria-selected="false" data-tab="taken"><span class="dot"></span>Diambil <span class="count" id="count-taken">0</span></button>
   </div>
+
+  <section class="add hidden" id="gen-box">
+    <div class="add-inner" style="padding-top:16px">
+      <div class="fields">
+        <div class="fld">
+          <label class="lbl" for="gen-n">Jumlah akun acak yang di-generate</label>
+          <input type="text" id="gen-n" value="100" inputmode="numeric" autocomplete="off" placeholder="100">
+        </div>
+        <div class="gen-hint" id="gen-hint"></div>
+        <div class="form-actions"><button class="btn" id="gen-btn"><svg class="ic"><use href="#i-key"/></svg>Generate key akun acak</button></div>
+      </div>
+      <div class="error" id="gen-err" role="alert"></div>
+    </div>
+  </section>
 
   <section class="add collapsed" id="add-box">
     <button type="button" class="add-head" id="add-toggle" aria-expanded="false" aria-controls="add-body">
@@ -429,10 +484,11 @@
   </div>
 
   <div id="tool-toko" class="hidden">
-    <p class="tk-hint">Kelola produk dan banner untuk web toko VIXZAA AM PREMIUM. Perubahan langsung tampil di web toko.</p>
+    <p class="tk-hint">Kelola produk, banner, serta nama &amp; logo untuk web toko. Perubahan langsung tampil di web toko.</p>
     <div class="segbar" role="tablist">
       <button class="ttab" role="tab" aria-selected="true" data-tt="prod">Produk <span class="n" id="tk-n1">0</span></button>
       <button class="ttab" role="tab" aria-selected="false" data-tt="bn">Banner <span class="n" id="tk-n2">0</span></button>
+      <button class="ttab" role="tab" aria-selected="false" data-tt="brand">Logo</button>
     </div>
 
     <div id="tk-p-prod">
@@ -496,6 +552,27 @@
         </div></div>
       </section>
       <div class="list" id="tk-blist"></div>
+    </div>
+
+    <div id="tk-p-brand" class="hidden">
+      <section class="add"><div class="add-inner" style="padding-top:16px">
+        <div class="fields">
+          <div><label class="lbl" for="tkl-name">Nama toko</label><input type="text" id="tkl-name" placeholder="VIXZAA AM PREMIUM" maxlength="40" autocomplete="off"></div>
+          <div><span class="lbl">Logo toko</span>
+            <div class="tk-drop sq" id="tkl-drop" style="--ar:1/1" tabindex="0" role="button" aria-label="Unggah logo toko">
+              <div class="tk-ph" id="tkl-ph"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><b>Klik atau seret logo ke sini</b><span>Disarankan persegi (mis. 512x512 px). Tampil bulat di web toko.</span></div>
+              <div class="tk-pv hidden" id="tkl-pv"><img class="tk-pimg" id="tkl-pimg" alt="Pratinjau logo"><div class="tk-pinfo" id="tkl-pinfo"></div>
+                <div class="tk-pb"><button type="button" class="btn ghost small" id="tkl-pchg">Ganti logo</button><button type="button" class="btn ghost small" id="tkl-prm" style="color:var(--danger)">Hapus logo</button></div></div>
+            </div>
+            <input type="file" id="tkl-file" accept="image/*" hidden>
+            <div class="tk-or">atau tempel URL gambar</div>
+            <input type="url" id="tkl-img" placeholder="https://.../logo.png" autocapitalize="off"></div>
+          <div><span class="lbl">Pratinjau header</span>
+            <div class="tk-card"><div class="tk-thumb" id="tkl-th" style="border-radius:50%;width:40px;height:40px;flex:none">V</div><div style="min-width:0"><div class="tk-cn" id="tkl-pn">VIXZAA AM PREMIUM</div><div class="tk-cs">Klik nama atau logo di web toko = muat ulang halaman</div></div></div></div>
+        </div>
+        <div class="error" id="tkl-err"></div>
+        <div class="tk-btns"><button class="btn" id="tkl-save">Simpan</button><button class="btn ghost" id="tkl-reset">Kembalikan bawaan</button></div>
+      </div></section>
     </div>
   </div>
 
@@ -610,7 +687,7 @@ const EMAIL_DOMAIN = "stokakun.app";
 const FB_VERSION = "10.12.2";
 /* ===================================================== */
 
-const LABEL = { non: "Non Licency", lic: "Licency" };
+const LABEL = { non: "Non Licency", lic: "Licency", taken: "Diambil" };
 const ico = (n) => `<svg class="ic" aria-hidden="true"><use href="#i-${n}"/></svg>`;
 const fmtDate = (ts) => {
   if (!ts) return "";
@@ -635,6 +712,14 @@ let openGroupMenu = null;
 let pendingDeleteGroup = null;
 const gstate = {};
 let pendingDeleteId = null;
+let pendingBatch = null;          /* {id, mode:"del"|"ret"} */
+let batches = [];
+let openBatchMenu = null;
+const bstate = {};
+const bshown = new Set();
+let unsubBatches = null;
+const claimUnsubs = {};
+const claiming = new Set();
 let loaded = false;
 let fb = null;
 let currentUser = null;
@@ -667,7 +752,11 @@ function render() {
   $("stat-num").textContent = loaded ? nLic : "-";
   $("count-non").textContent = accounts.filter(a => a.tab === "non").length;
   $("count-lic").textContent = accounts.filter(a => a.tab === "lic").length;
-  $("add-title").textContent = "Tambah akun ke " + LABEL[activeTab];
+  $("count-taken").textContent = batches.length;
+  const isT = activeTab === "taken";
+  $("add-box").classList.toggle("hidden", isT);
+  $("gen-box").classList.toggle("hidden", !isT);
+  $("add-title").textContent = "Tambah akun ke " + (LABEL[activeTab] || "");
   document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === activeTab));
 
   const list = $("list");
@@ -675,6 +764,7 @@ function render() {
     list.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div>`;
     return;
   }
+  if (isT) { renderBatches(); return; }
   const items = accounts.filter(a => a.tab === activeTab);
   if (!items.length) {
     list.innerHTML = `
@@ -697,7 +787,7 @@ function render() {
       <div class="item-head">
         <div class="avatar" aria-hidden="true">${initial}</div>
         <div class="meta">
-          <div class="name">${esc(a.name)}</div>
+          <div class="name">${esc(a.name)}${a.resv ? '<span class="tag-resv">Dipesan</span>' : ""}</div>
           ${date ? `<div class="date">Ditambahkan ${date}</div>` : ""}
         </div>
         <button class="icon-btn dots" data-act="menu" aria-label="Menu akun" aria-haspopup="true" aria-expanded="${openMenuId === a.id}">${ico("more")}</button>
@@ -783,7 +873,10 @@ function startListening(uid) {
   const q = fb.query(fb.collection(fb.db, "users", uid, "accounts"), fb.orderBy("createdAt", "desc"));
   unsubscribe = fb.onSnapshot(q,
     (snap) => {
-      accounts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      accounts = all.filter(a => a.kind !== "batch");
+      batches = all.filter(a => a.kind === "batch");   /* daftar diambil disimpan di koleksi yang sama (rules sudah ada) */
+      syncClaimWatch();
       loaded = true; hideNotice(); render();
       pend.clear(); window.dispatchEvent(new Event("stok:update"));
       /* sinkron jumlah stok untuk web toko VIXZAA AM PREMIUM */
@@ -800,7 +893,12 @@ function startListening(uid) {
         : "Gagal memuat data. Cek koneksi internet.");
     });
 }
-function stopListening() { if (unsubscribe) { try { unsubscribe(); } catch (e) {} unsubscribe = null; } }
+function stopListening() {
+  if (unsubscribe) { try { unsubscribe(); } catch (e) {} unsubscribe = null; }
+  if (unsubBatches) { try { unsubBatches(); } catch (e) {} unsubBatches = null; }
+  Object.keys(claimUnsubs).forEach(k => { try { claimUnsubs[k](); } catch (e) {} delete claimUnsubs[k]; });
+  batches = [];
+}
 
 function writeFailed(e) {
   console.error(e);
@@ -835,6 +933,182 @@ function dropCodes(acc) {
   // hapus semua kode milik akun (dipakai saat akun dihapus / dipindah ke Non Licency)
   (acc.codes || []).forEach(c => fb.deleteDoc(fb.doc(fb.db, "codes", c)).catch(() => {}));
 }
+
+/* ---------- Generate akun acak + daftar akun diambil ---------- */
+const batchRef = (id) => accRef(id);
+const codeRef = (k) => fb.doc(fb.db, "codes", k);
+const GEN_MAX = 400;   /* batas aman 1 transaksi Firestore (maks 500 operasi) */
+const fmtDT = (ts) => { try { return new Date(ts).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
+function shuffle(a) {
+  a = a.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const r = new Uint32Array(1); crypto.getRandomValues(r);
+    const j = r[0] % (i + 1); [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const freePool = () => accounts.filter(a => a.tab === "lic" && !a.resv);
+async function genBatch() {
+  const err = (t) => { $("gen-err").textContent = t || ""; };
+  if (!fb || !currentUser) return err("Belum terhubung ke Firebase.");
+  const n = parseInt(String($("gen-n").value).replace(/\D/g, ""), 10);
+  const pool = freePool();
+  if (!(n >= 1)) return err("Isi jumlah akun dulu ya (minimal 1).");
+  if (n > GEN_MAX) return err("Maksimal " + GEN_MAX + " akun sekali generate.");
+  if (n > pool.length) return err("Akun Licency yang tersedia hanya " + pool.length + ".");
+  err("");
+  $("gen-btn").disabled = true;
+  try {
+    const pick = shuffle(pool).slice(0, n);
+    const used = new Set([...allCodes(), ...batches.map(b => b.key)]);
+    let key; do { key = genCode(); } while (used.has(key));
+    const bid = newId(), now = Date.now();
+    const snap = pick.map(a => ({ id: a.id, name: a.name || "", user: a.user, pass: a.pass, createdAt: a.createdAt || 0 }));
+    const wb = fb.writeBatch(fb.db);
+    wb.set(batchRef(bid), { kind: "batch", key, n, status: "pending", accIds: pick.map(a => a.id), accounts: snap, createdAt: now });
+    wb.set(codeRef(key), { uid: currentUser.uid, batch: true, bid, count: n, claimed: false, createdAt: now,
+      accounts: snap.map(({ name, user, pass }) => ({ name, user, pass })) });
+    pick.forEach(a => wb.update(accRef(a.id), { resv: bid }));
+    await wb.commit();
+    bstate[bid] = true;
+    await copy(key, "Key " + key);
+  } catch (e) { writeFailed(e); }
+  $("gen-btn").disabled = false;
+}
+$("gen-btn").addEventListener("click", genBatch);
+$("gen-n").addEventListener("keydown", e => { if (e.key === "Enter") genBatch(); });
+$("gen-n").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 3); $("gen-err").textContent = ""; });
+
+/* pantau key yang belum diambil: begitu pembeli menekan "Ambil", akun dipindah ke daftar diambil */
+function syncClaimWatch() {
+  const want = new Set(batches.filter(b => b.status === "pending").map(b => b.key));
+  Object.keys(claimUnsubs).forEach(k => { if (!want.has(k)) { try { claimUnsubs[k](); } catch (e) {} delete claimUnsubs[k]; } });
+  want.forEach(k => {
+    if (claimUnsubs[k]) return;
+    claimUnsubs[k] = fb.onSnapshot(codeRef(k), (d) => {
+      if (d.exists() && d.data().claimed === true) {
+        const b = batches.find(x => x.key === k);
+        if (b) processClaim(b);
+      }
+    }, () => {});
+  });
+}
+async function processClaim(b) {
+  if (!b || b.status !== "pending" || claiming.has(b.id) || !fb || !currentUser) return;
+  claiming.add(b.id);
+  try {
+    const wb = fb.writeBatch(fb.db);
+    wb.update(batchRef(b.id), { status: "taken", takenAt: Date.now(), accIds: [] });
+    (b.accIds || []).forEach(id => {
+      const a = accounts.find(x => x.id === id);
+      if (a) dropCodes(a);           /* kode lama milik akun itu ikut dicabut */
+      wb.delete(accRef(id));
+    });
+    await wb.commit();
+    toast("Key " + b.key + " diambil: " + b.n + " akun dipindah ke Diambil");
+  } catch (e) { writeFailed(e); }
+  claiming.delete(b.id);
+}
+async function returnBatch(b) {
+  if (!fb || !currentUser) return;
+  try {
+    const wb = fb.writeBatch(fb.db);
+    let back = 0;
+    if (b.status === "taken") {
+      const have = new Set(accounts.map(a => String(a.user).trim().toLowerCase()));
+      (b.accounts || []).forEach(a => {
+        if (have.has(String(a.user).trim().toLowerCase())) return;   /* jangan dobel */
+        wb.set(accRef(newId()), { name: a.name || DEFAULT_NAME, user: a.user, pass: a.pass, tab: "lic", createdAt: a.createdAt || Date.now() });
+        back++;
+      });
+    } else {
+      (b.accIds || []).forEach(id => { if (accounts.some(a => a.id === id)) { wb.update(accRef(id), { resv: "" }); back++; } });
+    }
+    wb.delete(batchRef(b.id)); wb.delete(codeRef(b.key));
+    await wb.commit();
+    toast(b.status === "taken" ? back + " akun dikembalikan ke Licency" : "Key dibatalkan");
+  } catch (e) { writeFailed(e); }
+}
+async function deleteBatch(b) {
+  if (!fb || !currentUser) return;
+  try {
+    const wb = fb.writeBatch(fb.db);
+    wb.delete(batchRef(b.id)); wb.delete(codeRef(b.key));
+    await wb.commit();
+    toast("Tab dihapus");
+  } catch (e) { writeFailed(e); }
+}
+function renderBatches() {
+  const list = $("list");
+  const pool = freePool().length, resv = accounts.filter(a => a.tab === "lic" && a.resv).length;
+  $("gen-hint").textContent = "Tersedia " + pool + " akun Licency untuk di-generate" + (resv ? " (" + resv + " sedang dipesan key)" : "") + ".";
+  if (!batches.length) {
+    list.innerHTML = `<div class="empty"><div class="badge" aria-hidden="true">${ico("key")}</div><strong>Belum ada akun yang di-generate</strong><span>Isi jumlah di atas lalu klik Generate. Tiap generate jadi satu tab sendiri.</span></div>`;
+    return;
+  }
+  const total = batches.length;
+  list.innerHTML = batches.map((b, i) => {
+    const no = total - i, open = !!bstate[b.id], pend = b.status !== "taken", menu = openBatchMenu === b.id;
+    const accs = b.accounts || [];
+    const rows = open ? accs.map((a, k) => {
+      const vis = bshown.has(b.id + ":" + k), pw = String(a.pass || "");
+      return `<article class="item t-lic" data-bid="${esc(b.id)}" data-i="${k}">
+        <div class="item-head"><div class="avatar" aria-hidden="true">${esc((Array.from(String(a.name || a.user || "?").trim())[0] || "?").toUpperCase())}</div>
+          <div class="meta"><div class="name">${esc(a.name || DEFAULT_NAME)}</div><div class="date">Akun ${k + 1}</div></div>
+          <button class="icon-btn" data-bact="inbox" aria-label="Lihat inbox" title="Lihat inbox">${ico("mail")}</button></div>
+        <div class="field"><div class="f-text"><span class="f-label">Akun</span><span class="val">${esc(a.user)}</span></div>
+          <div class="f-actions"><button class="icon-btn" data-bact="cu" aria-label="Salin akun" title="Salin akun">${ico("copy")}</button></div></div>
+        <div class="field"><div class="f-text"><span class="f-label">Sandi</span><span class="val">${vis ? esc(pw) : "•".repeat(Math.min(Math.max(pw.length, 6), 14))}</span></div>
+          <div class="f-actions"><button class="icon-btn ${vis ? "is-on" : ""}" data-bact="tp" aria-label="Lihat sandi" title="Lihat sandi">${ico(vis ? "eye-off" : "eye")}</button>
+          <button class="icon-btn" data-bact="cp" aria-label="Salin sandi" title="Salin sandi">${ico("copy")}</button></div></div>
+      </article>`;
+    }).join("") : "";
+    return `<section class="sg bg ${pend ? "pending" : "taken"} ${open ? "open" : ""}" data-bid="${esc(b.id)}">
+      <div class="sg-head">
+        <button class="sg-toggle" data-bact="toggle" aria-expanded="${open}">
+          <span class="bg-t"><b>Generate #${no}<span class="bg-tag ${pend ? "pending" : "taken"}">${pend ? "Belum diambil" : "Sudah diambil"}</span></b><small>${esc(fmtDT(pend ? b.createdAt : (b.takenAt || b.createdAt)))} · Key ${esc(b.key)}</small></span>
+          <span class="count">${b.n}</span><span class="chev" aria-hidden="true">${ico("chev")}</span></button>
+        <button class="icon-btn" data-bact="menu" aria-label="Menu tab" aria-haspopup="true" aria-expanded="${menu}">${ico("more")}</button>
+        <div class="sg-menu ${menu ? "show" : ""}" role="menu">
+          <button role="menuitem" data-bact="ret">${ico("swap")}${pend ? "Batalkan key" : "Ambil kembali akun"}</button>
+          ${pend ? "" : `<button role="menuitem" class="del" data-bact="del">${ico("trash")}Hapus tab ini</button>`}
+        </div>
+      </div>
+      <div class="sg-body">
+        <div class="bg-key"><div class="k"><span>Key untuk web Licency</span><b>${esc(b.key)}</b></div><button class="icon-btn" data-bact="ck" aria-label="Salin key" title="Salin key">${ico("copy")}</button></div>
+        ${pend ? `<div class="bg-note">Belum diambil. Sampai pembeli menekan tombol ambil, ${b.n} akun ini masih ada di tab Licency (ditandai Dipesan).</div>` : ""}
+        ${rows}
+      </div>
+    </section>`;
+  }).join("");
+}
+$("list").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-bact]"); if (!btn) return;
+  e.stopPropagation();
+  const sec = btn.closest(".bg"); if (!sec) return;
+  const b = batches.find(x => x.id === sec.dataset.bid); if (!b) return;
+  const act = btn.dataset.bact, ar = btn.closest("[data-i]"), a = ar ? (b.accounts || [])[+ar.dataset.i] : null;
+  if (act === "toggle") { bstate[b.id] = !bstate[b.id]; openBatchMenu = null; render(); }
+  else if (act === "menu") { openBatchMenu = openBatchMenu === b.id ? null : b.id; render(); }
+  else if (act === "ck") copy(b.key, "Key");
+  else if (act === "cu" && a) copy(a.user, "Akun");
+  else if (act === "cp" && a) copy(a.pass, "Sandi");
+  else if (act === "tp" && a) { const k = b.id + ":" + ar.dataset.i; bshown.has(k) ? bshown.delete(k) : bshown.add(k); render(); }
+  else if (act === "inbox" && a) { if (window.mailApi) window.mailApi.view(a.user, a.pass); else toast("Fitur mail belum siap"); }
+  else if (act === "ret" || act === "del") {
+    openBatchMenu = null; render();
+    const del = act === "del", pend = b.status !== "taken";
+    pendingBatch = { id: b.id, mode: del ? "del" : "ret" };
+    $("m-title").textContent = del ? "Hapus tab ini?" : (pend ? "Batalkan key ini?" : "Ambil kembali akun?");
+    $("m-text").innerHTML = del
+      ? "Tab <b>Generate</b> berisi <b>" + b.n + " akun</b> akan dihapus. Akun yang sudah diambil <b>tidak bisa diakses lagi</b> dan key <b>" + esc(b.key) + "</b> tidak berlaku."
+      : (pend ? "Key <b>" + esc(b.key) + "</b> dibatalkan dan " + b.n + " akun bebas lagi untuk dijual."
+              : "<b>" + b.n + " akun</b> dikembalikan ke tab Licency dan stok bertambah lagi. Key <b>" + esc(b.key) + "</b> tidak berlaku lagi.");
+    $("m-ok").textContent = del ? "Ya, hapus" : (pend ? "Ya, batalkan" : "Ya, ambil kembali");
+    $("overlay").classList.add("show");
+    $("m-cancel").focus();
+  }
+});
 
 /* ---------- Salin ---------- */
 async function copy(text, label) {
@@ -975,15 +1249,20 @@ $("list").addEventListener("click", (e) => {
   }
 });
 
-document.addEventListener("click", () => { if (openMenuId || openGroupMenu) { openMenuId = null; openGroupMenu = null; render(); } });
+document.addEventListener("click", () => { if (openMenuId || openGroupMenu || openBatchMenu) { openMenuId = null; openGroupMenu = null; openBatchMenu = null; render(); } });
 
-function closeModal() { $("overlay").classList.remove("show"); pendingDeleteId = null; pendingDeleteGroup = null; }
+function closeModal() { $("overlay").classList.remove("show"); pendingDeleteId = null; pendingDeleteGroup = null; pendingBatch = null; $("m-ok").textContent = "Ya, hapus"; }
 $("m-cancel").addEventListener("click", closeModal);
 $("overlay").addEventListener("click", e => { if (e.target === $("overlay")) closeModal(); });
 $("m-ok").addEventListener("click", () => {
-  const id = pendingDeleteId, gids = pendingDeleteGroup;
+  const id = pendingDeleteId, gids = pendingDeleteGroup, pb = pendingBatch;
   closeModal();
   if (!fb || !currentUser) return;
+  if (pb) {
+    const b = batches.find(x => x.id === pb.id);
+    if (b) (pb.mode === "del" ? deleteBatch(b) : returnBatch(b));
+    return;
+  }
   if (gids) {
     gids.forEach(i => { shown.delete(i); const a = accounts.find(x => x.id === i); if (a) dropCodes(a); });
     Promise.all(gids.map(i => fb.deleteDoc(accRef(i)))).catch(writeFailed);
@@ -997,7 +1276,7 @@ $("m-ok").addEventListener("click", () => {
   toast("Akun dihapus");
 });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeModal(); if (openMenuId || openGroupMenu) { openMenuId = null; openGroupMenu = null; render(); } }
+  if (e.key === "Escape") { closeModal(); if (openMenuId || openGroupMenu || openBatchMenu) { openMenuId = null; openGroupMenu = null; openBatchMenu = null; render(); } }
 });
 
 /* ---------- Login / Keluar ---------- */
@@ -1105,7 +1384,7 @@ async function init() {
       signInWithEmailAndPassword: authM.signInWithEmailAndPassword, signOut: authM.signOut,
       onAuthStateChanged: authM.onAuthStateChanged,
       collection: fsM.collection, doc: fsM.doc, setDoc: fsM.setDoc, updateDoc: fsM.updateDoc,
-      deleteDoc: fsM.deleteDoc, onSnapshot: fsM.onSnapshot, query: fsM.query, orderBy: fsM.orderBy
+      deleteDoc: fsM.deleteDoc, onSnapshot: fsM.onSnapshot, query: fsM.query, orderBy: fsM.orderBy, writeBatch: fsM.writeBatch
     };
     // Sesi login disimpan Firebase di browser, jadi refresh tidak membuat keluar
     fb.onAuthStateChanged(fb.auth, (user) => {
@@ -1134,7 +1413,8 @@ async function init() {
 const SRCL = { lic: "Licency", non: "Non Licency", manual: "Manual" };
 const rupiah = (n) => "Rp" + Number(n || 0).toLocaleString("id-ID");
 const fixUrl = (l) => { l = String(l || "").trim(); return l && !/^https?:\/\//i.test(l) ? "https://" + l : l; };
-let tkProducts = [], tkBanners = [], tkUnsubs = [], tkEdit = null, tkImg = "", tkBImg = "";
+let tkProducts = [], tkBanners = [], tkUnsubs = [], tkEdit = null, tkImg = "", tkBImg = "", tkLImg = "", tkLoaded = false;
+const TK_DEF_NAME = "VIXZAA AM PREMIUM";
 function tkStock(p) {
   if (p.stockType === "manual") return Math.max(0, parseInt(p.stockManual) || 0);
   return accounts.filter(a => a.tab === p.stockType).length;
@@ -1171,10 +1451,18 @@ function tkStart() {
     (s) => { tkProducts = s.docs.map(d => ({ id: d.id, ...d.data() })); tkRender(); }, err));
   tkUnsubs.push(fb.onSnapshot(fb.query(fb.collection(fb.db, "banners"), fb.orderBy("createdAt", "asc")),
     (s) => { tkBanners = s.docs.map(d => ({ id: d.id, ...d.data() })); tkRender(); }, err));
+  tkUnsubs.push(fb.onSnapshot(fb.doc(fb.db, "public", "store"), (s) => {
+    if (tkLoaded) return;               /* isi form sekali saja agar ketikan tidak tertimpa */
+    tkLoaded = true;
+    const d = s.exists() ? s.data() : {};
+    $("tkl-name").value = d.name || ""; tkLImg = d.logo || "";
+    $("tkl-img").value = tkLImg && !tkLImg.startsWith("data:") ? tkLImg : "";
+    tkLUp.show(tkLImg, tkLImg ? "Logo saat ini" : ""); tkBrandPreview();
+  }, err));
 }
 function tkStop() {
   tkUnsubs.forEach(u => { try { u(); } catch (e) {} });
-  tkUnsubs = []; tkProducts = []; tkBanners = []; tkRender();
+  tkUnsubs = []; tkProducts = []; tkBanners = []; tkLoaded = false; tkRender();
 }
 window.addEventListener("stok:update", tkRender);
 function tkShrink(file, max, cb) {
@@ -1244,6 +1532,32 @@ function tkPreview() {
 }
 const tkUp = tkUploader("tk", 1200, (v) => { tkImg = v; }, tkPreview);
 const tkBUp = tkUploader("tkb", 1920, (v) => { tkBImg = v; }, () => {});
+function tkBrandPreview() {
+  const n = $("tkl-name").value.trim() || TK_DEF_NAME, th = $("tkl-th");
+  $("tkl-pn").textContent = n; th.textContent = n.charAt(0).toUpperCase();
+  if (tkLImg) { const im = document.createElement("img"); im.src = tkLImg; im.alt = ""; im.onerror = () => im.remove(); th.appendChild(im); }
+}
+const tkLUp = tkUploader("tkl", 512, (v) => { tkLImg = v; }, tkBrandPreview);
+$("tkl-name").addEventListener("input", tkBrandPreview);
+$("tkl-save").addEventListener("click", async () => {
+  if (!fb || !currentUser) { $("tkl-err").textContent = "Belum terhubung ke Firebase."; return; }
+  if (tkLImg.length > 300000) { $("tkl-err").textContent = "Logo terlalu besar, pakai gambar lain."; return; }
+  $("tkl-save").disabled = true;
+  try {
+    await fb.setDoc(fb.doc(fb.db, "public", "store"), { name: $("tkl-name").value.trim(), logo: tkLImg, updatedAt: Date.now() });
+    $("tkl-err").textContent = ""; toast("Nama & logo toko disimpan");
+  } catch (e) { writeFailed(e); }
+  $("tkl-save").disabled = false;
+});
+$("tkl-reset").addEventListener("click", async () => {
+  if (!fb || !currentUser) { $("tkl-err").textContent = "Belum terhubung ke Firebase."; return; }
+  if (!confirm("Kembalikan nama dan logo toko ke bawaan?")) return;
+  try {
+    await fb.setDoc(fb.doc(fb.db, "public", "store"), { name: "", logo: "", updatedAt: Date.now() });
+    $("tkl-name").value = ""; tkLImg = ""; tkLUp.show(""); $("tkl-img").value = ""; tkBrandPreview();
+    $("tkl-err").textContent = ""; toast("Dikembalikan ke bawaan");
+  } catch (e) { writeFailed(e); }
+});
 function tkToggle(boxId, btnId, open) {
   const box = $(boxId), want = open === undefined ? box.classList.contains("collapsed") : open;
   box.classList.toggle("collapsed", !want); $(btnId).setAttribute("aria-expanded", String(want));
@@ -1265,6 +1579,7 @@ document.querySelectorAll(".ttab").forEach(b => b.addEventListener("click", () =
   document.querySelectorAll(".ttab").forEach(x => x.setAttribute("aria-selected", String(x === b)));
   $("tk-p-prod").classList.toggle("hidden", b.dataset.tt !== "prod");
   $("tk-p-bn").classList.toggle("hidden", b.dataset.tt !== "bn");
+  $("tk-p-brand").classList.toggle("hidden", b.dataset.tt !== "brand");
 }));
 async function tkSave(again) {
   const name = $("tk-name").value.trim(), pv = $("tk-price").value, price = Number(pv);
@@ -1351,20 +1666,32 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){retur
 function toast(t){var e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){e.classList.remove("show")},2000)}
 function copy(t){(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast("Tersalin")},function(){toast("Gagal menyalin")})}
 function err(t){$("m-err").textContent=t||""}
+var PICK=null;
 function api(p,o,tk){o=o||{};o.headers={"Accept":"application/ld+json"};
   if(o.ct)o.headers["Content-Type"]=o.ct;else if(o.body)o.headers["Content-Type"]="application/json";
   if(tk)o.headers.Authorization="Bearer "+tk;
-  function go(base){return fetch(base?base+"?p="+encodeURIComponent(p):API+p,o)}
-  /* kalau proxy mati/diblokir, otomatis coba langsung ke api.mail.tm */
-  function viaProxy(){return go(PROXY).then(function(r){return(r.status===204||/json/i.test(r.headers.get("content-type")||""))?r:go("")},function(e){if(e instanceof TypeError)return go("");throw e})}
-  return(PROXY?viaProxy():go("")).then(function(r){if(r.status===204)return null;
-    return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(j["hydra:description"]||j.message||("Error "+r.status));e.status=r.status;throw e}return j})})}
+  var routes=[];
+  if(PICK!==null)routes.push(PICK);
+  if(PROXY&&routes.indexOf("proxy")<0)routes.push("proxy");
+  if(routes.indexOf("direct")<0)routes.push("direct");
+  function go(i){
+    var r=routes[i];
+    var url=r==="proxy"?PROXY+"?p="+encodeURIComponent(p):API+p;
+    return fetch(url,o).then(function(res){
+      if(r==="proxy"&&(res.status>=500||res.status===403||res.status===404)&&i<routes.length-1)return go(i+1);
+      PICK=r;
+      if(res.status===204)return null;
+      return res.json().catch(function(){return{}}).then(function(j){if(!res.ok){var e=new Error(j["hydra:description"]||j.message||("Error "+res.status));e.status=res.status;throw e}return j})
+    },function(e){if(i<routes.length-1){PICK=null;return go(i+1)}throw e});
+  }
+  return go(0);
+}
 function tok(a,p){return api("/token",{method:"POST",body:JSON.stringify({address:a,password:p})})}
 function rnd(n){var a="abcdefghijkmnpqrstuvwxyz23456789",o="",b=new Uint32Array(n);crypto.getRandomValues(b);for(var i=0;i<n;i++)o+=a[b[i]%a.length];return o}
 function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
 
 /* pemilih tool */
-var TT={stok:["Stok Akun","Simpan akun dan kata sandi"],mail:["Mail Akun","Buat email sementara dan baca inbox-nya"],am:["Aktivasi AM","Aktifkan paket VIP Alight Motion"],toko:["Toko","Kelola produk dan banner web toko"]};
+var TT={stok:["Stok Akun","Simpan akun dan kata sandi"],mail:["Mail Akun","Buat email sementara dan baca inbox-nya"],am:["Aktivasi AM","Aktifkan paket VIP Alight Motion"],toko:["Toko","Kelola produk, banner, nama & logo web toko"]};
 document.querySelectorAll(".tool-btn").forEach(function(b){b.addEventListener("click",function(){
   var k=b.dataset.tool;
   document.querySelectorAll(".tool-btn").forEach(function(x){x.setAttribute("aria-selected",x===b)});
@@ -1567,10 +1894,22 @@ function inbox(quiet){
 $("m-sel").addEventListener("change",function(){S.active=this.value;save();back()});
 $("m-refresh").addEventListener("click",function(){inbox()});
 function back(){$("m-reader").classList.add("hidden");$("m-msgs").classList.remove("hidden");inbox(true)}
+function mailFrame(fr,html){
+  var cs=getComputedStyle(document.documentElement),v=function(n){return cs.getPropertyValue(n).trim()};
+  var css='<base target="_blank"><meta name="color-scheme" content="light dark"><style>'+
+    'html,body{background:'+v("--card")+'!important;color:'+v("--ink")+'!important;margin:0}'+
+    'body{padding:14px 16px;font:15px/1.6 '+v("--font")+';overflow-wrap:anywhere;word-break:break-word}'+
+    '*{color:'+v("--ink")+'!important;background-color:transparent!important;border-color:'+v("--line")+'!important;max-width:100%}'+
+    'a,a *{color:'+v("--accent")+'!important;text-decoration:underline}'+
+    'img{height:auto}table{width:auto!important}'+
+    '</style>';
+  fr.onload=function(){try{var d=fr.contentDocument;fr.style.height=Math.max(160,d.documentElement.scrollHeight+4)+"px"}catch(e){}};
+  fr.srcdoc=css+html;
+}
 $("m-msgs").addEventListener("click",function(e){var b=e.target.closest(".mrow");if(!b)return;var m=S.msgs[+b.dataset.m];
   authed("/messages/"+m.id).then(function(f){var h=f.html&&f.html.length;
-    $("m-reader").innerHTML='<div class="mbar"><button class="btn ghost small" data-a="back">Kembali</button><button class="btn ghost small" data-a="del" data-id="'+esc(f.id)+'">Hapus pesan</button></div><h3>'+esc(f.subject||"(tanpa subjek)")+'</h3><div class="mm">Dari '+esc((f.from&&f.from.address)||"-")+' &middot; '+esc(new Date(f.createdAt).toLocaleString("id-ID"))+'</div>'+(h?'<iframe sandbox="" referrerpolicy="no-referrer" id="m-frame"></iframe>':'<pre>'+esc(f.text||"")+'</pre>');
-    if(h)$("m-frame").srcdoc=f.html.join?f.html.join(""):f.html;
+    $("m-reader").innerHTML='<div class="mbar"><button class="btn ghost small" data-a="back">Kembali</button><button class="btn ghost small" data-a="del" data-id="'+esc(f.id)+'">Hapus pesan</button></div><h3>'+esc(f.subject||"(tanpa subjek)")+'</h3><div class="mm">Dari '+esc((f.from&&f.from.address)||"-")+' &middot; '+esc(new Date(f.createdAt).toLocaleString("id-ID"))+'</div>'+(h?'<iframe sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" id="m-frame"></iframe>':'<pre>'+esc(f.text||"")+'</pre>');
+    if(h)mailFrame($("m-frame"),f.html.join?f.html.join(""):f.html);
     $("m-msgs").classList.add("hidden");$("m-reader").classList.remove("hidden");
     if(!m.seen)authed("/messages/"+m.id,{method:"PATCH",ct:"application/merge-patch+json",body:"{}"}).then(function(){m.seen=true}).catch(function(){})
   }).catch(function(e){toast(e.message)})});
