@@ -640,6 +640,12 @@
             <div class="fld"><label class="lbl" for="m-gcount">Jumlah email (1-10)</label>
               <div class="with-btn"><input type="text" id="m-gcount" value="1" inputmode="numeric"><button class="btn" id="m-gen">Generate email</button></div></div>
             <label class="switch-row"><input type="checkbox" id="au-after" checked><span>Aktivasi otomatis setelah generate</span></label>
+            <label class="switch-row"><input type="checkbox" id="au-cont"><span>Mode terus-menerus: kalau antrian habis atau limit selesai, generate akun baru otomatis</span></label>
+            <div class="fld"><label class="lbl" for="au-batch">Akun baru tiap putaran (1-10)</label>
+              <input type="text" id="au-batch" value="5" inputmode="numeric" autocomplete="off"></div>
+            <div class="fld"><label class="lbl" for="au-target">Berhenti setelah total aktif (0 = tanpa batas)</label>
+              <input type="text" id="au-target" value="0" inputmode="numeric" autocomplete="off"></div>
+            <p class="hint" style="margin:0">Limit API 15 akun per jam. Biarkan tab ini tetap terbuka supaya lanjut otomatis setelah limit selesai.</p>
           </div>
           <div class="error" style="color:var(--muted)" id="m-ghint">Hasil: awalan + 3 angka acak, contoh ampremium537</div>
           <div class="error" id="m-gmsg" role="status"></div>
@@ -1758,29 +1764,45 @@ try{if(localStorage.getItem("mailakun.digits")==="4")$("m-gdigits").value="4"}ca
 $("m-gdigits").addEventListener("change",function(){try{localStorage.setItem("mailakun.digits",this.value)}catch(e){}gHint()});
 $("m-gprefix").addEventListener("input",gHint);gHint();
 var gmsgT;function gmsgHide(t){var e=$("m-gmsg");e.textContent=t;clearTimeout(gmsgT);gmsgT=setTimeout(function(){e.textContent=""},3000)}
-$("m-gen").addEventListener("click",function(){
-  if(!S.doms.length)return($("m-gmsg").textContent="Domain belum dimuat.");
-  if(window.stokApi&&!window.stokApi.ready())return($("m-gmsg").textContent="Data Licency belum dimuat, coba lagi sebentar.");
+var GENBUSY=false;
+function genCheck(){
+  if(!S.doms.length)return"Domain belum dimuat.";
+  if(window.stokApi&&!window.stokApi.ready())return"Data Licency belum dimuat, coba lagi sebentar.";
   var pre=$("m-gprefix").value.trim().toLowerCase();
-  if(pre&&!/^[a-z0-9._-]+$/.test(pre))return($("m-gmsg").textContent="Awalan hanya boleh huruf, angka, titik, strip, dan garis bawah.");
-  if(pre&&pre.length<3)return($("m-gmsg").textContent="Awalan minimal 3 karakter (kata sandi minimal 6 karakter).");
-  var n=Math.max(1,Math.min(10,parseInt($("m-gcount").value,10)||1)),ok=0,bad=0,last="",btn=this,lbl=btn.textContent;btn.disabled=true;clearTimeout(gmsgT);$("m-gmsg").textContent="";
-  var ins=0,full=false,stop=false,hard=0,r422=0,dg=$("m-gdigits").value==="4"?4:3;
+  if(pre&&!/^[a-z0-9._-]+$/.test(pre))return"Awalan hanya boleh huruf, angka, titik, strip, dan garis bawah.";
+  if(pre&&pre.length<3)return"Awalan minimal 3 karakter (kata sandi minimal 6 karakter).";
+  return""}
+function genRun(n,stopFn,onProg){
+  var pre=$("m-gprefix").value.trim().toLowerCase(),dg=$("m-gdigits").value==="4"?4:3;
+  var ok=0,last="",ins=0,full=false,stop=false,hard=0,r422=0;
+  GENBUSY=true;
+  function halted(){return!!(stopFn&&stopFn())}
   function dly(e,k){return(e&&e.status===429?4000:1500)*Math.min(k,4)}
-  function slot(){var ad=mkAddr(pre,dg);if(!ad){full=true;return Promise.resolve()}
-    var p=$("m-auto").checked?ad.split("@")[0]:rnd(12);
-    function getTok(k){return tok(ad,p).catch(function(e){if(k>=4)throw e;return wait(dly(e,k+1)).then(function(){return getTok(k+1)})})}
-    return api("/accounts",{method:"POST",body:JSON.stringify({address:ad,password:p})}).then(function(){markUsed(ad);return getTok(0)}).then(function(r){
-      S.acc.splice(ins++,0,{address:ad,password:p,id:r.id,token:r.token,fresh:true});GOPEN[""]=true;S.active=ad;save();render();ok++;last=ad;hard=0},function(e){
-      if(e&&e.status===422){markUsed(ad);if(++r422>60){stop=true;return}return slot()}
-      if(++hard>=8){stop=true;return}
-      btn.textContent="Mencoba ulang "+(ok+1)+" dari "+n+"...";
-      return wait(dly(e,hard)).then(slot)})}
-  (function next(){
-    if(ok>=n||full||stop){btn.disabled=false;btn.textContent=lbl;
-      if(ok){copy(last);gmsgHide(ok>=n?ok+" email dibuat":ok+" dari "+n+" email dibuat. "+(full?"Kombinasi angka habis.":"Coba lagi sebentar lagi."))}else gmsgHide(full?"Kombinasi angka habis. Pilih 4 angka atau ganti awalan.":"Gagal membuat email. Coba lagi sebentar lagi.");if(ok&&window.autoAct&&window.autoAct.after())window.autoAct.start();return}
-    btn.textContent="Membuat "+(ok+1)+" dari "+n+"...";
-    slot().then(function(){return wait(700)}).then(next)})()});
+  return new Promise(function(done){
+    function slot(){if(halted())return Promise.resolve();
+      var ad=mkAddr(pre,dg);if(!ad){full=true;return Promise.resolve()}
+      var p=$("m-auto").checked?ad.split("@")[0]:rnd(12);
+      function getTok(k){return tok(ad,p).catch(function(e){if(k>=4)throw e;return wait(dly(e,k+1)).then(function(){return getTok(k+1)})})}
+      return api("/accounts",{method:"POST",body:JSON.stringify({address:ad,password:p})}).then(function(){markUsed(ad);return getTok(0)}).then(function(r){
+        S.acc.splice(ins++,0,{address:ad,password:p,id:r.id,token:r.token,fresh:true});GOPEN[""]=true;S.active=ad;save();render();ok++;last=ad;hard=0},function(e){
+        if(e&&e.status===422){markUsed(ad);if(++r422>60){stop=true;return}return slot()}
+        if(++hard>=8){stop=true;return}
+        if(onProg)onProg(ok+1,true);
+        return wait(dly(e,hard)).then(slot)})}
+    (function next(){
+      if(ok>=n||full||stop||halted()){GENBUSY=false;done({ok:ok,full:full,last:last});return}
+      if(onProg)onProg(ok+1,false);
+      slot().then(function(){return wait(700)}).then(next)})()})}
+$("m-gen").addEventListener("click",function(){
+  if(GENBUSY)return;
+  var msg=genCheck();if(msg)return($("m-gmsg").textContent=msg);
+  var n=Math.max(1,Math.min(10,parseInt($("m-gcount").value,10)||1)),btn=this,lbl=btn.textContent;
+  btn.disabled=true;clearTimeout(gmsgT);$("m-gmsg").textContent="";
+  genRun(n,null,function(i,retry){btn.textContent=(retry?"Mencoba ulang ":"Membuat ")+i+" dari "+n+"..."}).then(function(r){
+    btn.disabled=false;btn.textContent=lbl;
+    if(r.ok){copy(r.last);gmsgHide(r.ok>=n?r.ok+" email dibuat":r.ok+" dari "+n+" email dibuat. "+(r.full?"Kombinasi angka habis.":"Coba lagi sebentar lagi."))}
+    else gmsgHide(r.full?"Kombinasi angka habis. Pilih 4 angka atau ganti awalan.":"Gagal membuat email. Coba lagi sebentar lagi.");
+    if(r.ok&&window.autoAct&&window.autoAct.after())window.autoAct.start()})});
 
 /* daftar akun */
 function fld(l,v,a,i){return'<div class="field"><div class="f-text"><span class="f-label">'+l+'</span><span class="val">'+esc(v)+'</span></div><div class="f-actions"><button class="icon-btn" data-a="'+a+'" data-i="'+i+'" aria-label="Salin"><svg class="ic"><use href="#i-copy"/></svg></button></div></div>'}
@@ -1863,6 +1885,12 @@ window.mailApi={
   next:function(){var v=vis();return v[0]?v[0].address:""},
   count:function(){return vis().length},
   queue:function(){return vis().map(function(a){return a.address})},
+  gen:function(n,stopFn){
+    if(GENBUSY)return Promise.resolve({ok:0,msg:"Generate lain sedang berjalan."});
+    var m=genCheck();if(m)return Promise.resolve({ok:0,msg:m});
+    var b=$("m-gen");b.disabled=true;
+    return genRun(n,stopFn,function(i,retry){$("m-gmsg").textContent="Otomatis: "+(retry?"mencoba ulang ":"membuat ")+i+" dari "+n+"..."}).then(function(r){
+      b.disabled=false;$("m-gmsg").textContent="";return r})},
   setBusy:function(ad,st){var k=String(ad).trim().toLowerCase();if(st)BUSY[k]=st;else delete BUSY[k];render()},
   clearBusy:function(){BUSY={};render()},
   remove:removeAcc,
@@ -2031,7 +2059,7 @@ $("am-btn2").addEventListener("click",verify);
 fillNext(false);
 
 /* ===== Aktivasi otomatis berantrian ===== */
-var AU={on:false,run:0,cur:"",skip:{},done:0,fail:0,msg:"",limit:null,tick:0};
+var AU={on:false,run:0,cur:"",skip:{},done:0,fail:0,cfail:0,gfail:0,gen:"",msg:"",limit:null,tick:0};
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
 var BLN={jan:0,feb:1,mar:2,apr:3,mei:4,jun:5,jul:6,agu:7,sep:8,okt:9,nov:10,des:11};
 function auLimitUntil(msg){return limHit().until}
@@ -2052,7 +2080,7 @@ function auPick(){var q=auQueue();for(var i=0;i<q.length;i++)if(!AU.skip[q[i].to
 function auUI(msg){
   if(msg!==undefined)AU.msg=msg;
   var left=auQueue().filter(function(a){return!AU.skip[a.toLowerCase()]}).length;
-  var line=AU.on&&AU.limit?auLimitLine():AU.on?("Berjalan: memproses "+(AU.cur||"...")+" · sisa antrian "+left+" akun"):(AU.msg||(left?"Siap. Ada "+left+" akun dalam antrian.":"Antrian kosong. Generate email dulu di tab Mail."));
+  var line=AU.on&&AU.limit?auLimitLine():AU.on&&AU.gen?AU.gen:AU.on?("Berjalan: memproses "+(AU.cur||"...")+" · sisa antrian "+left+" akun"):(AU.msg||(left?"Siap. Ada "+left+" akun dalam antrian.":"Antrian kosong. Generate email dulu di tab Mail."));
   document.querySelectorAll(".au-toggle").forEach(function(b){b.textContent=AU.on?"Hentikan aktivasi otomatis":"Mulai aktivasi otomatis";b.classList.toggle("on",AU.on);b.setAttribute("aria-pressed",String(AU.on))});
   document.querySelectorAll(".au-line").forEach(function(l){l.textContent=line});
   $("am-btn1").disabled=AU.on;$("am-btn2").disabled=AU.on}
@@ -2107,7 +2135,7 @@ function auOne(email,my){
     return auSave(email,q.p)
   }).then(function(){
     window.mailApi.remove(email);window.mailApi.setBusy(email,null);
-    AU.done++;lock=false;$("am-link").value="";step(4);showOk(email,"Sudah masuk ke Licency")
+    AU.done++;AU.cfail=0;lock=false;$("am-link").value="";step(4);showOk(email,"Sudah masuk ke Licency")
   }).catch(function(e){
     if(e&&e.message==="__stop")return;
     if(/limit|kuota/i.test((e&&e.message)||"")){
@@ -2115,13 +2143,35 @@ function auOne(email,my){
       window.mailApi.setBusy(email,{s:"wait",m:"Menunggu limit API"});
       show(limMsg(e.message)+"\nAntrian berhenti dan lanjut otomatis pukul "+auHM(AU.limit.until)+" WIB.","info");
       return}
-    AU.skip[email.toLowerCase()]=1;AU.fail++;
+    AU.skip[email.toLowerCase()]=1;AU.fail++;AU.cfail++;
     window.mailApi.setBusy(email,{s:"err",m:(e&&e.message)||(e&&e.name==="AbortError"?"Server tidak merespons (timeout)":"Permintaan gagal")});
     show(((e&&e.message)||netErr(e))+" ("+email+"). Lanjut ke akun berikutnya.","err")})}
+function auCont(){return $("au-cont").checked}
+function auBatch(){return Math.max(1,Math.min(10,parseInt($("au-batch").value,10)||5))}
+function auTarget(){return Math.max(0,parseInt($("au-target").value,10)||0)}
+function auFinish(m){AU.on=false;AU.cur="";AU.gen="";clearInterval(AU.tick);auUI(m)}
+function auGen(my){
+  var t=auTarget(),n=auBatch();
+  if(t)n=Math.min(n,Math.max(1,t-AU.done));
+  AU.cur="";AU.gen="Membuat "+n+" akun email baru...";auUI();
+  return window.mailApi.gen(n,function(){return my!==AU.run}).then(function(r){
+    if(my!==AU.run)return;
+    if(r.ok){AU.gfail=0;AU.gen="";auUI();return sleep(1000).then(function(){auLoop(my)})}
+    if(++AU.gfail>=5)return auFinish("Berhenti: gagal membuat akun baru 5 kali berturut-turut. "+(r.msg||"Cek koneksi lalu tekan Mulai lagi."));
+    AU.gen="Gagal membuat akun baru"+(r.msg?" ("+r.msg+")":"")+". Coba lagi dalam 30 detik...";auUI();
+    return sleep(30000).then(function(){auLoop(my)})})}
 function auLoop(my){
   if(my!==AU.run||!AU.on)return;
+  AU.gen="";
+  if(auCont()&&AU.cfail>=5)return auFinish("Berhenti: 5 aktivasi gagal berturut-turut (bukan karena limit). Periksa pesan error di daftar, lalu tekan Mulai lagi.");
+  var tg=auTarget();
+  if(tg&&AU.done>=tg)return auFinish("Target tercapai. Berhasil "+AU.done+" akun"+(AU.fail?", gagal "+AU.fail:"")+".");
+  var lm=limGet();
+  if(lm&&!AU.limit&&auCont()){AU.limit={until:lm.until,email:""};AU.cur="";return auWaitLimit(my).then(function(){auLoop(my)})}
   var ad=auPick();
-  if(!ad){AU.on=false;AU.cur="";auUI(AU.done+AU.fail?"Antrian selesai. Berhasil "+AU.done+(AU.fail?", gagal "+AU.fail:"")+".":"Antrian kosong. Generate email dulu di tab Mail.");return}
+  if(!ad){
+    if(auCont())return auGen(my);
+    AU.on=false;AU.cur="";auUI(AU.done+AU.fail?"Antrian selesai. Berhasil "+AU.done+(AU.fail?", gagal "+AU.fail:"")+".":"Antrian kosong. Generate email dulu di tab Mail.");return}
   AU.cur=ad;auUI();
   auOne(ad,my).then(function(){
     if(my!==AU.run)return;
@@ -2130,13 +2180,13 @@ function auLoop(my){
   }).then(function(){auLoop(my)})}
 function auStart(){
   if(AU.on)return;
-  AU.skip={};AU.done=0;AU.fail=0;AU.msg="";
+  AU.skip={};AU.done=0;AU.fail=0;AU.cfail=0;AU.gfail=0;AU.gen="";AU.msg="";
   if(window.mailApi)window.mailApi.clearBusy();
   AU.on=true;var my=++AU.run;auUI();auLoop(my)}
 function auStop(){
   if(!AU.on)return;
   var le=AU.limit&&AU.limit.email;
-  AU.on=false;AU.run++;clearInterval(AU.tick);AU.limit=null;
+  AU.on=false;AU.run++;clearInterval(AU.tick);AU.limit=null;AU.gen="";
   if(AU.cur&&window.mailApi)window.mailApi.setBusy(AU.cur,null);
   if(le&&window.mailApi)window.mailApi.setBusy(le,null);
   AU.cur="";auUI("Aktivasi otomatis dihentikan.")}
@@ -2152,6 +2202,12 @@ document.querySelectorAll(".au-toggle").forEach(function(b){b.addEventListener("
 var auAfter=$("au-after");
 try{if(localStorage.getItem("mailakun.autoafter")==="0")auAfter.checked=false}catch(x){}
 auAfter.addEventListener("change",function(){try{localStorage.setItem("mailakun.autoafter",this.checked?"1":"0")}catch(x){}});
+[["au-cont","mailakun.cont"],["au-batch","mailakun.batch"],["au-target","mailakun.target"]].forEach(function(p){
+  var el=$(p[0]);
+  try{var v=localStorage.getItem(p[1]);if(v!==null){if(el.type==="checkbox")el.checked=v==="1";else el.value=v}}catch(x){}
+  el.addEventListener(el.type==="checkbox"?"change":"input",function(){
+    if(el.type!=="checkbox")el.value=el.value.replace(/\D/g,"").slice(0,3);
+    try{localStorage.setItem(p[1],el.type==="checkbox"?(el.checked?"1":"0"):el.value)}catch(x){}})});
 window.addEventListener("mail:update",function(){if(!AU.on)auUI()});
 window.autoAct={start:auStart,stop:auStop,reset:auReset,after:function(){return auAfter.checked}};
 auUI();
